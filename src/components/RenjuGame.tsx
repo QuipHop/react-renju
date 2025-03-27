@@ -2,7 +2,12 @@ import { useState } from "react";
 import clsx from "clsx";
 import { BOARD_SIZE, CELL_SIZE, examples, WIN_STREAK } from "../constants";
 
-export type Stone = 0 | 1 | 2;
+export enum Stone {
+  Empty = 0,
+  Black = 1,
+  White = 2,
+}
+
 export type Board = Stone[][];
 
 interface GameResult {
@@ -23,7 +28,7 @@ const checkWinner = (board: Board): GameResult => {
   for (let r = 0; r < BOARD_SIZE; r++) {
     for (let c = 0; c < BOARD_SIZE; c++) {
       const stone = board[r][c];
-      if (stone === 0) continue;
+      if (stone === Stone.Empty) continue;
 
       for (const { dr, dc } of DIRECTIONS) {
         let count = 1;
@@ -69,9 +74,9 @@ const RenjuBoardStatic = () => {
   const result = checkWinner(board);
 
   const renderResult = () => {
-    if (result.winner === 0) return "0";
+    if (result.winner === Stone.Empty) return "0";
     const { row, col } = result.startPosition!;
-    return `${result.winner === 1 ? "black" : "white"}\n${row + 1} ${col + 1}`;
+    return `${result.winner === Stone.Black ? "black" : "white"}\n${row + 1} ${col + 1}`;
   };
 
   return (
@@ -121,14 +126,14 @@ const RenjuBoardStatic = () => {
                     `${CELL_SIZE} border border-gray-200`,
                     "flex items-center justify-center text-lg",
                     "bg-gray-100",
-                    stone === 1 && "bg-black text-white",
-                    stone === 2 && "bg-white text-black",
+                    stone === Stone.Black && "bg-black text-white",
+                    stone === Stone.White && "bg-white text-black",
                     result?.startPosition?.row === rowIndex &&
                       result?.startPosition?.col === colIndex &&
                       "ring-2 ring-red-500"
                   )}
                 >
-                  {stone === 1 ? "⚫" : stone === 2 ? "⚪" : ""}
+                  {stone === Stone.Black ? "⚫" : stone === Stone.White ? "⚪" : ""}
                 </div>
               ))
             )}
