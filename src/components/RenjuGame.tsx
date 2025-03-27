@@ -16,8 +16,11 @@ const DIRECTIONS = [
   { dr: -1, dc: 1 },
 ];
 
+const BOARD_SIZE = 19;
+const WIN_STREAK = 5;
+
 const checkWinner = (board: Board): GameResult => {
-  const size = 19;
+  const size = BOARD_SIZE;
   const isInBounds = (r: number, c: number) => r >= 0 && r < size && c >= 0 && c < size;
 
   for (let r = 0; r < size; r++) {
@@ -36,11 +39,11 @@ const checkWinner = (board: Board): GameResult => {
           nc += dc;
         }
 
-        if (count === 5) {
+        if (count === WIN_STREAK) {
           const prevR = r - dr;
           const prevC = c - dc;
-          const nextR = r + dr * 5;
-          const nextC = c + dc * 5;
+          const nextR = r + dr * WIN_STREAK;
+          const nextC = c + dc * WIN_STREAK;
 
           const overBefore = isInBounds(prevR, prevC) && board[prevR][prevC] === stone;
           const overAfter = isInBounds(nextR, nextC) && board[nextR][nextC] === stone;
@@ -55,7 +58,7 @@ const checkWinner = (board: Board): GameResult => {
   return { winner: 0 };
 };
 
-const createEmptyBoard = (): Board => Array.from({ length: 19 }, () => Array(19).fill(0));
+const createEmptyBoard = (): Board => Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(0));
 
 const CELL_SIZE = "w-10 aspect-square";
 
@@ -91,7 +94,7 @@ const RenjuGame = () => {
         {/* Column Numbers */}
         <div className="flex">
           <div className={`${CELL_SIZE}`} />
-          {Array.from({ length: 19 }, (_, i) => (
+          {Array.from({ length: BOARD_SIZE }, (_, i) => (
             <div
               key={i}
               className={clsx(
@@ -107,7 +110,7 @@ const RenjuGame = () => {
         <div className="flex">
           {/* Row Numbers */}
           <div className="flex flex-col">
-            {Array.from({ length: 19 }, (_, i) => (
+            {Array.from({ length: BOARD_SIZE }, (_, i) => (
               <div
                 key={i}
                 className={clsx(
