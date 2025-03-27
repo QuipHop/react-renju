@@ -1,5 +1,6 @@
 import { useState } from "react";
 import clsx from "clsx";
+import { BOARD_SIZE, CELL_SIZE, examples, WIN_STREAK } from "../constants";
 
 export type Stone = 0 | 1 | 2;
 export type Board = Stone[][];
@@ -16,15 +17,11 @@ const DIRECTIONS = [
   { dr: -1, dc: 1 },
 ];
 
-const BOARD_SIZE = 19;
-const WIN_STREAK = 5;
-
 const checkWinner = (board: Board): GameResult => {
-  const size = BOARD_SIZE;
-  const isInBounds = (r: number, c: number) => r >= 0 && r < size && c >= 0 && c < size;
+  const isInBounds = (r: number, c: number) => r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE;
 
-  for (let r = 0; r < size; r++) {
-    for (let c = 0; c < size; c++) {
+  for (let r = 0; r < BOARD_SIZE; r++) {
+    for (let c = 0; c < BOARD_SIZE; c++) {
       const stone = board[r][c];
       if (stone === 0) continue;
 
@@ -55,120 +52,95 @@ const checkWinner = (board: Board): GameResult => {
       }
     }
   }
+
   return { winner: 0 };
 };
 
-const createEmptyBoard = (): Board => Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(0));
+const parseBoardInput = (input: string): Board => {
+  const lines = input.trim().split(/\n|\r/);
+  return lines.map((line) => line.trim().split(/\s+/).map(Number) as Stone[]);
+};
 
-const CELL_SIZE = "w-10 aspect-square";
+const data: Record<string, string> = examples;
 
-const RenjuGame = () => {
-  const [board, setBoard] = useState<Board>(createEmptyBoard());
-  const [currentPlayer, setCurrentPlayer] = useState<Stone>(1);
+const RenjuBoardStatic = () => {
+  const [input, setInput] = useState(data["Horizontal Win (Black)"]);
+  const board = parseBoardInput(input);
   const result = checkWinner(board);
 
-  const handleClick = (row: number, col: number) => {
-    if (board[row][col] !== 0 || result.winner !== 0) return;
-    const newBoard = board.map((r) => [...r]);
-    newBoard[row][col] = currentPlayer;
-    setBoard(newBoard);
-    setCurrentPlayer(currentPlayer === 1 ? 2 : 1);
-  };
-
-  const renderResult = (): string => {
+  const renderResult = () => {
     if (result.winner === 0) return "0";
     const { row, col } = result.startPosition!;
-    return `${result.winner == 1 ? 'black' : 'white'}\n${row + 1} ${col + 1}`;
+    return `${result.winner === 1 ? "black" : "white"}\n${row + 1} ${col + 1}`;
   };
 
   return (
     <div className="flex flex-col items-center gap-4">
-      <h2 className="text-xl font-bold">Renju Game</h2>
-      <p className="text-sm">
-        {result.winner === 0
-          ? `Current turn: ${currentPlayer === 1 ? "Black (1)" : "White (2)"}`
-          : `Game Over: Player ${result.winner} Wins!`}
-      </p>
+      <h2 className="text-xl font-bold">Renju Static Evaluator</h2>
+
+      <div className="flex gap-2 items-center">
+        <label htmlFor="preset-select" className="text-sm font-medium">Preset:</label>
+        <select
+          id="preset-select"
+          className="px-2 py-1 border rounded text-sm"
+          onChange={(e) => setInput(examples[e.target.value])}
+        >
+          {Object.keys(examples).map((label) => (
+            <option key={label} value={label}>{label}</option>
+          ))}
+        </select>
+      </div>
+
+      <textarea
+        className="w-full max-w-3xl h-64 font-mono text-sm p-2 border rounded"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+      />
 
       <div className="bg-gray-300 p-1 rounded shadow">
-        {/* Column Numbers */}
         <div className="flex">
           <div className={`${CELL_SIZE}`} />
           {Array.from({ length: BOARD_SIZE }, (_, i) => (
-            <div
-              key={i}
-              className={clsx(
-                CELL_SIZE,
-                "flex-grow flex items-center justify-center text-xs text-gray-700"
-              )}
-            >
-              {i + 1}
-            </div>
+            <div key={i} className={clsx(CELL_SIZE, "flex flex-grow items-center justify-center text-xs text-gray-700")}>{i + 1}</div>
           ))}
         </div>
 
         <div className="flex">
-          {/* Row Numbers */}
           <div className="flex flex-col">
             {Array.from({ length: BOARD_SIZE }, (_, i) => (
-              <div
-                key={i}
-                className={clsx(
-                  CELL_SIZE,
-                  "flex-grow flex items-center justify-center text-xs text-gray-700"
-                )}
-              >
-                {i + 1}
-              </div>
+              <div key={i} className={clsx(CELL_SIZE, "flex flex-grow items-center justify-center text-xs text-gray-700")}>{i + 1}</div>
             ))}
           </div>
 
-          {/* Game Grid */}
           <div className="grid grid-cols-19 gap-px">
             {board.map((row, rowIndex) =>
               row.map((stone, colIndex) => (
-                <button
+                <div
                   key={`${rowIndex}-${colIndex}`}
                   className={clsx(
                     `${CELL_SIZE} border border-gray-200`,
-                    "flex items-center justify-center",
-                    "bg-gray-100 hover:bg-gray-200 p-0",
+                    "flex items-center justify-center text-lg",
+                    "bg-gray-100",
                     stone === 1 && "bg-black text-white",
                     stone === 2 && "bg-white text-black",
                     result?.startPosition?.row === rowIndex &&
                       result?.startPosition?.col === colIndex &&
                       "ring-2 ring-red-500"
                   )}
-                  onClick={() => handleClick(rowIndex, colIndex)}
-                  disabled={stone !== 0 || result.winner !== 0}
                 >
                   {stone === 1 ? "⚫" : stone === 2 ? "⚪" : ""}
-                </button>
+                </div>
               ))
             )}
           </div>
         </div>
       </div>
 
-      <div className="flex gap-2 mt-4">
-        <button
-          onClick={() => {
-            setBoard(createEmptyBoard());
-            setCurrentPlayer(1);
-          }}
-          className="px-4 py-2 bg-blue-600 text-white rounded shadow"
-        >
-          Restart
-        </button>
+      <div className="mt-2 text-center text-sm whitespace-pre bg-white px-4 py-2 rounded shadow">
+        <p className="text-black">RESULT: {renderResult()}</p>
       </div>
-
-      {result.winner !== 0 && (
-        <div className="mt-2 text-center text-sm whitespace-pre bg-white px-4 py-2 rounded shadow">
-          <p className="text-black">WINNER: {renderResult()}</p>
-        </div>
-      )}
     </div>
   );
 };
 
-export default RenjuGame;
+export default RenjuBoardStatic;
