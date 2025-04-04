@@ -1,5 +1,5 @@
 import './App.css'
-import RenjuBoard from './components/RenjuGame';
+import RenjuBoardStatic from './components/RenjuGame';
 
 function App() {
 
@@ -62,7 +62,7 @@ function App() {
   return (
     <>
     <div className="min-h-screen p-4 bg-green-50">
-      <RenjuBoard />
+      <RenjuBoardStatic />
     </div>
     </>
   )

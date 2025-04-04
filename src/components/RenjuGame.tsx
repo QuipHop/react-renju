@@ -1,6 +1,7 @@
 import { useState } from "react";
-import clsx from "clsx";
 import { BOARD_SIZE, CELL_SIZE, examples, WIN_STREAK } from "../constants";
+import { BoardDisplay } from "./BoardDisplay";
+import { PresetSelector } from "./PresetSelector";
 
 export enum Stone {
   Empty = 0,
@@ -10,20 +11,21 @@ export enum Stone {
 
 export type Board = Stone[][];
 
-interface GameResult {
+export interface IGameResult {
   winner: Stone;
   startPosition?: { row: number; col: number };
 }
 
 const DIRECTIONS = [
-  { deltaRow: 0, deltaCol: 1 },   // horizontal
-  { deltaRow: 1, deltaCol: 0 },   // vertical
-  { deltaRow: 1, deltaCol: 1 },   // diagonal right down
-  { deltaRow: -1, deltaCol: 1 },  // diagonal right up
+  { deltaRow: 0, deltaCol: 1 }, // horizontal
+  { deltaRow: 1, deltaCol: 0 }, // vertical
+  { deltaRow: 1, deltaCol: 1 }, // diagonal right down
+  { deltaRow: -1, deltaCol: 1 }, // diagonal right up
 ];
 
-const checkWinner = (board: Board): GameResult => {
-  const isInBounds = (r: number, c: number) => r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE;
+const checkWinner = (board: Board): IGameResult => {
+  const isInBounds = (r: number, c: number) =>
+    r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE;
 
   for (let row = 0; row < BOARD_SIZE; row++) {
     for (let col = 0; col < BOARD_SIZE; col++) {
@@ -35,7 +37,10 @@ const checkWinner = (board: Board): GameResult => {
         let nextRow = row + deltaRow;
         let nextCol = col + deltaCol;
 
-        while (isInBounds(nextRow, nextCol) && board[nextRow][nextCol] === stone) {
+        while (
+          isInBounds(nextRow, nextCol) &&
+          board[nextRow][nextCol] === stone
+        ) {
           count++;
           nextRow += deltaRow;
           nextCol += deltaCol;
@@ -47,8 +52,10 @@ const checkWinner = (board: Board): GameResult => {
           const nextR = row + deltaRow * WIN_STREAK;
           const nextC = col + deltaCol * WIN_STREAK;
 
-          const overBefore = isInBounds(prevR, prevC) && board[prevR][prevC] === stone;
-          const overAfter = isInBounds(nextR, nextC) && board[nextR][nextC] === stone;
+          const overBefore =
+            isInBounds(prevR, prevC) && board[prevR][prevC] === stone;
+          const overAfter =
+            isInBounds(nextR, nextC) && board[nextR][nextC] === stone;
 
           if (!overBefore && !overAfter) {
             return { winner: stone, startPosition: { row: row, col: col } };
@@ -76,25 +83,16 @@ const RenjuBoardStatic = () => {
   const renderResult = () => {
     if (result.winner === Stone.Empty) return "0";
     const { row, col } = result.startPosition!;
-    return `${result.winner === Stone.Black ? "black" : "white"}\n${row + 1} ${col + 1}`;
+    return `${result.winner === Stone.Black ? "black" : "white"}\n${row + 1} ${
+      col + 1
+    }`;
   };
 
   return (
     <div className="flex flex-col items-center gap-4">
       <h2 className="text-xl font-bold">Renju Static Evaluator</h2>
 
-      <div className="flex gap-2 items-center">
-        <label htmlFor="preset-select" className="text-sm font-medium">Preset:</label>
-        <select
-          id="preset-select"
-          className="px-2 py-1 border rounded text-sm"
-          onChange={(e) => setInput(examples[e.target.value])}
-        >
-          {Object.keys(examples).map((label) => (
-            <option key={label} value={label}>{label}</option>
-          ))}
-        </select>
-      </div>
+      <PresetSelector examples={examples} setInput={setInput} />
 
       <textarea
         className="w-full max-w-3xl h-64 font-mono text-sm p-2 border rounded"
@@ -102,44 +100,7 @@ const RenjuBoardStatic = () => {
         onChange={(e) => setInput(e.target.value)}
       />
 
-      <div className="bg-gray-300 p-1 rounded shadow">
-        <div className="flex">
-          <div className={`${CELL_SIZE}`} />
-          {Array.from({ length: BOARD_SIZE }, (_, i) => (
-            <div key={i} className={clsx(CELL_SIZE, "flex flex-grow items-center justify-center text-xs text-gray-700")}>{i + 1}</div>
-          ))}
-        </div>
-
-        <div className="flex">
-          <div className="flex flex-col">
-            {Array.from({ length: BOARD_SIZE }, (_, i) => (
-              <div key={i} className={clsx(CELL_SIZE, "flex flex-grow items-center justify-center text-xs text-gray-700")}>{i + 1}</div>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-19 gap-px">
-            {board.map((row, rowIndex) =>
-              row.map((stone, colIndex) => (
-                <div
-                  key={`${rowIndex}-${colIndex}`}
-                  className={clsx(
-                    `${CELL_SIZE} border border-gray-200`,
-                    "flex items-center justify-center text-lg",
-                    "bg-gray-100",
-                    stone === Stone.Black && "bg-black text-white",
-                    stone === Stone.White && "bg-white text-black",
-                    result?.startPosition?.row === rowIndex &&
-                      result?.startPosition?.col === colIndex &&
-                      "ring-2 ring-red-500"
-                  )}
-                >
-                  {stone === Stone.Black ? "⚫" : stone === Stone.White ? "⚪" : ""}
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      </div>
+      <BoardDisplay board={board} result={result} cellSizeClass={CELL_SIZE} />
 
       <div className="mt-2 text-center text-sm whitespace-pre bg-white px-4 py-2 rounded shadow">
         <p className="text-black">RESULT: {renderResult()}</p>
