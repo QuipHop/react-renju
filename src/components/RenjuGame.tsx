@@ -16,42 +16,42 @@ interface GameResult {
 }
 
 const DIRECTIONS = [
-  { dr: 0, dc: 1 },
-  { dr: 1, dc: 0 },
-  { dr: 1, dc: 1 },
-  { dr: -1, dc: 1 },
+  { deltaRow: 0, deltaCol: 1 },   // horizontal
+  { deltaRow: 1, deltaCol: 0 },   // vertical
+  { deltaRow: 1, deltaCol: 1 },   // diagonal right down
+  { deltaRow: -1, deltaCol: 1 },  // diagonal right up
 ];
 
 const checkWinner = (board: Board): GameResult => {
   const isInBounds = (r: number, c: number) => r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE;
 
-  for (let r = 0; r < BOARD_SIZE; r++) {
-    for (let c = 0; c < BOARD_SIZE; c++) {
-      const stone = board[r][c];
+  for (let row = 0; row < BOARD_SIZE; row++) {
+    for (let col = 0; col < BOARD_SIZE; col++) {
+      const stone = board[row][col];
       if (stone === Stone.Empty) continue;
 
-      for (const { dr, dc } of DIRECTIONS) {
+      for (const { deltaRow, deltaCol } of DIRECTIONS) {
         let count = 1;
-        let nr = r + dr;
-        let nc = c + dc;
+        let nextRow = row + deltaRow;
+        let nextCol = col + deltaCol;
 
-        while (isInBounds(nr, nc) && board[nr][nc] === stone) {
+        while (isInBounds(nextRow, nextCol) && board[nextRow][nextCol] === stone) {
           count++;
-          nr += dr;
-          nc += dc;
+          nextRow += deltaRow;
+          nextCol += deltaCol;
         }
 
         if (count === WIN_STREAK) {
-          const prevR = r - dr;
-          const prevC = c - dc;
-          const nextR = r + dr * WIN_STREAK;
-          const nextC = c + dc * WIN_STREAK;
+          const prevR = row - deltaRow;
+          const prevC = col - deltaCol;
+          const nextR = row + deltaRow * WIN_STREAK;
+          const nextC = col + deltaCol * WIN_STREAK;
 
           const overBefore = isInBounds(prevR, prevC) && board[prevR][prevC] === stone;
           const overAfter = isInBounds(nextR, nextC) && board[nextR][nextC] === stone;
 
           if (!overBefore && !overAfter) {
-            return { winner: stone, startPosition: { row: r, col: c } };
+            return { winner: stone, startPosition: { row: row, col: col } };
           }
         }
       }
